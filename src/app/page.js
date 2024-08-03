@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material'
+import { Box, Stack, Typography, Button, Modal, TextField, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material'
 import { firestore } from '@/app/firebase'
 import {
   collection,
@@ -12,24 +12,65 @@ import {
   deleteDoc,
   getDoc,
 } from 'firebase/firestore'
+import AddIcon from '@mui/icons-material/Add'
 
-const style = {
+// Define styles
+const modalStyle = {
   position: 'absolute',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 400,
-  bgcolor: 'white',
-  border: '2px solid #000',
+  bgcolor: '#ffffff',
+  borderRadius: '8px',
   boxShadow: 24,
   p: 4,
+}
+
+const containerStyle = {
+  display: 'flex',
+  height: '100vh',
+  backgroundColor: '#f4f6f8',
+  fontFamily: 'Arial, sans-serif',
+}
+
+const sidebarStyle = {
+  width: '250px',
+  backgroundColor: '#81c784', // Light green
+  color: '#ffffff',
+  padding: '20px',
   display: 'flex',
   flexDirection: 'column',
-  gap: 3,
+  justifyContent: 'space-between',
+}
+
+const mainContentStyle = {
+  flexGrow: 1,
+  padding: '20px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '20px',
+}
+
+const headerStyle = {
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  paddingBottom: '10px',
+}
+
+const tableStyle = {
+  marginTop: '20px',
+  borderRadius: '8px',
+  overflow: 'hidden',
+}
+
+const tableHeaderStyle = {
+  backgroundColor: '#66bb6a', // Darker light green
+  color: '#ffffff',
 }
 
 export default function Home() {
-  // We'll add our component logic here
   const [inventory, setInventory] = useState([])
   const [open, setOpen] = useState(false)
   const [itemName, setItemName] = useState('')
@@ -43,7 +84,7 @@ export default function Home() {
     })
     setInventory(inventoryList)
   }
-  
+
   useEffect(() => {
     updateInventory()
   }, [])
@@ -59,7 +100,7 @@ export default function Home() {
     }
     await updateInventory()
   }
-  
+
   const removeItem = async (item) => {
     const docRef = doc(collection(firestore, 'inventory'), item)
     const docSnap = await getDoc(docRef)
@@ -77,89 +118,82 @@ export default function Home() {
   const handleOpen = () => setOpen(true)
   const handleClose = () => setOpen(false)
 
-
   return (
-      <Box
-      width="100vw"
-      height="100vh"
-      display={'flex'}
-      justifyContent={'center'}
-      flexDirection={'column'}
-      alignItems={'center'}
-      gap={2}
-    >
-      <Modal
-        open={open}
-        onClose={handleClose}
-        aria-labelledby="modal-modal-title"
-        aria-describedby="modal-modal-description"
-      >
-        <Box sx={style}>
-          <Typography id="modal-modal-title" variant="h6" component="h2">
-            Add Item
-          </Typography>
-          <Stack width="100%" direction={'row'} spacing={2}>
-            <TextField
-              id="outlined-basic"
-              label="Item"
-              variant="outlined"
-              fullWidth
-              value={itemName}
-              onChange={(e) => setItemName(e.target.value)}
-            />
-            <Button
-              variant="outlined"
-              onClick={() => {
-                addItem(itemName)
-                setItemName('')
-                handleClose()
-              }}
-            >
-              Add
-            </Button>
-          </Stack>
-        </Box>
-      </Modal>
-      <Button variant="contained" onClick={handleOpen}>
-        Add New Item
-      </Button>
-      <Box border={'1px solid #333'}>
-        <Box
-          width="800px"
-          height="100px"
-          bgcolor={'#ADD8E6'}
-          display={'flex'}
-          justifyContent={'center'}
-          alignItems={'center'}
+    <Box sx={containerStyle}>
+      <Box sx={sidebarStyle}>
+        <Typography variant="h5">Inventory Manager</Typography>
+        <Button variant="text" color="inherit" onClick={handleOpen} startIcon={<AddIcon />}>
+          Add Item
+        </Button>
+      </Box>
+
+      <Box sx={mainContentStyle}>
+        <Typography variant="h4" color="#333">
+          Inventory Items
+        </Typography>
+
+        <Modal
+          open={open}
+          onClose={handleClose}
+          aria-labelledby="modal-modal-title"
+          aria-describedby="modal-modal-description"
         >
-          <Typography variant={'h2'} color={'#333'} textAlign={'center'}>
-            Inventory Items
-          </Typography>
-        </Box>
-        <Stack width="800px" height="300px" spacing={2} overflow={'auto'}>
-          {inventory.map(({name, quantity}) => (
-            <Box
-              key={name}
-              width="100%"
-              minHeight="150px"
-              display={'flex'}
-              justifyContent={'space-between'}
-              alignItems={'center'}
-              bgcolor={'#f0f0f0'}
-              paddingX={5}
-            >
-              <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                {name.charAt(0).toUpperCase() + name.slice(1)}
-              </Typography>
-              <Typography variant={'h3'} color={'#333'} textAlign={'center'}>
-                Quantity: {quantity}
-              </Typography>
-              <Button variant="contained" onClick={() => removeItem(name)}>
-                Remove
+          <Box sx={modalStyle}>
+            <Typography id="modal-modal-title" variant="h6" component="h2" color="#66bb6a">
+              Add Item
+            </Typography>
+            <Stack width="100%" direction={'row'} spacing={2}>
+              <TextField
+                id="outlined-basic"
+                label="Item"
+                variant="outlined"
+                fullWidth
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+              />
+              <Button
+                variant="contained"
+                sx={{ bgcolor: '#66bb6a', '&:hover': { bgcolor: '#388e3c' } }} // Darker green on hover
+                onClick={() => {
+                  addItem(itemName)
+                  setItemName('')
+                  handleClose()
+                }}
+              >
+                Add
               </Button>
-            </Box>
-          ))}
-        </Stack>
+            </Stack>
+          </Box>
+        </Modal>
+
+        <TableContainer component={Paper} sx={tableStyle}>
+          <Table>
+            <TableHead>
+              <TableRow sx={tableHeaderStyle}>
+                <TableCell align="left" sx={{ color: '#ffffff' }}>Item Name</TableCell>
+                <TableCell align="center" sx={{ color: '#ffffff' }}>Quantity</TableCell>
+                <TableCell align="right" sx={{ color: '#ffffff' }}>Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {inventory.map(({ name, quantity }) => (
+                <TableRow key={name}>
+                  <TableCell align="left">{name.charAt(0).toUpperCase() + name.slice(1)}</TableCell>
+                  <TableCell align="center">{quantity}</TableCell>
+                  <TableCell align="right">
+                    <Button
+                      variant="outlined"
+                      onClick={() => removeItem(name)}
+                      color="error"
+                    >
+                      Remove
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
       </Box>
     </Box>
   )
